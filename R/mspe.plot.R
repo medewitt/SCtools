@@ -16,6 +16,14 @@
 #' @param title Character. Optional. Title of the plot.
 #' @param xlab Character. Optional. Label of the x axis.
 #' @param ylab Character. Optional. Label of the y axis.
+#' @return \describe{
+#'		 \item{p.dot }{Plot with the post/pre MSPE ratios for the treated unit and
+#'		 each placebo indicated individually. Returned if \code{plot.hist} is 
+#'		 \code{FALSE}.}
+#'		 \item{p.dens }{Histogram of the distribution of post/pre MSPE ratios for
+#'		 all placebos and the treated unit. Returned if \code{plot.hist} is 
+#'		 \code{TRUE}.}
+#' }
 #' @details Post/pre-treatement mean square prediction error ratio is the 
 #'     difference between the observed outcome of a unit and its synthetic 
 #'     control, before and after treatement. A higher ratio means a small 
@@ -45,7 +53,43 @@
 #' @seealso \code{\link{generate.placebos}}, \code{\link{mspe.test}}, 
 #'     \code{\link{plot_placebos}}, \code{\link[Synth]{synth}}
 #' @examples 
-## Example with toy data from 'Synth'
+#' \dontshow{## Example with toy data from Synth
+#' library(Synth)
+#' # Load the simulated data
+#' data(synth.data)
+#' 
+#' # Execute dataprep to produce the necessary matrices for synth
+#' dataprep.out<-
+#'   dataprep(
+#'     foo = synth.data,
+#'     predictors = c("X1"),
+#'     predictors.op = "mean",
+#'     dependent = "Y",
+#'     unit.variable = "unit.num",
+#'     time.variable = "year",
+#'     special.predictors = list(
+#'       list("Y", 1991, "mean")
+#'     ),
+#'     treatment.identifier = 7,
+#'     controls.identifier = c(29, 2, 17),
+#'     time.predictors.prior = c(1984:1989),
+#'     time.optimize.ssr = c(1984:1990),
+#'     unit.names.variable = "name",
+#'     time.plot = 1984:1996
+#' )
+#' 
+#' # run the synth command to create the synthetic control
+#' synth.out <- synth(dataprep.out, Sigf.ipop=1)
+#' 
+#' tdf <- generate.placebos(dataprep.out,synth.out, Sigf.ipop = 1)
+#' ## Test how extreme was the observed treatment effect given the placebos:
+#' ratio <- mspe.test(tdf)
+#' ratio$p.val
+#' 
+## Check visually how extreme is this value in the distribution:
+#' mspe.plot(tdf, discard.extreme = FALSE)
+#' }
+#' \donttest{## Example with toy data from 'Synth'
 #' library(Synth)
 #' # Load the simulated data
 #' data(synth.data)
@@ -85,7 +129,7 @@
 #' 
 ## Check visually how extreme is this value in the distribution:
 #' mspe.plot(tdf, discard.extreme = FALSE)
-#'    
+#' }   
 #' @export 
 
 mspe.plot <-
@@ -127,8 +171,8 @@ function(tdf,
                                 shape=factor(treat)))+
       ggplot2::geom_point(size=4)+
       ggplot2::scale_color_manual(values = c('gray50','black'),
-                         guide = FALSE)+
-      ggplot2::scale_shape_manual(values = c(17,15),guide = FALSE) + 
+                         guide = 'none')+
+      ggplot2::scale_shape_manual(values = c(17,15),guide = 'none') + 
       ggplot2::labs(y=ylab,
            x=xlab,
            title=title)+

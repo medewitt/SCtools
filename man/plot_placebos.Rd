@@ -4,8 +4,16 @@
 \alias{plot_placebos}
 \title{Function to plot placebos of a synthetic control analysis}
 \usage{
-plot_placebos(tdf = tdf, discard.extreme = FALSE, mspe.limit = 20,
-  xlab = NULL, ylab = NULL, title = NULL, alpha.placebos = 1, ...)
+plot_placebos(
+  tdf = tdf,
+  discard.extreme = FALSE,
+  mspe.limit = 20,
+  xlab = NULL,
+  ylab = NULL,
+  title = NULL,
+  alpha.placebos = 1,
+  ...
+)
 }
 \arguments{
 \item{tdf}{An object with a list of outcome values for placebos, 
@@ -29,12 +37,52 @@ discarded. Default is \code{20}.}
 
 \item{...}{optional arguments (currently not used)}
 }
+\value{
+p.gaps Gaps plot indicating difference between the treated unit, 
+	 the placebos, and their respective synthetic controls.
+}
 \description{
 Creates plots with the difference between observed units 
     and synthetic controls for the treated and control units. 
     See Abadie, Diamond, and Hainmueller (2011).
 }
 \examples{
+\dontshow{## Example with toy data from Synth
+library(Synth)
+# Load the simulated data
+data(synth.data)
+
+# Execute dataprep to produce the necessary matrices for synth
+dataprep.out<-
+  dataprep(
+    foo = synth.data,
+    predictors = c("X1"),
+    predictors.op = "mean",
+    dependent = "Y",
+    unit.variable = "unit.num",
+    time.variable = "year",
+    special.predictors = list(
+      list("Y", 1991, "mean")
+    ),
+    treatment.identifier = 7,
+    controls.identifier = c(29, 2, 17),
+    time.predictors.prior = c(1984:1989),
+    time.optimize.ssr = c(1984:1990),
+    unit.names.variable = "name",
+    time.plot = 1984:1996
+)
+
+# run the synth command to create the synthetic control
+synth.out <- synth(dataprep.out, Sigf.ipop=1)
+
+tdf <- generate.placebos(dataprep.out,synth.out, Sigf.ipop = 1)
+## Plot the gaps in outcome values over time of each unit --
+## treated and placebos -- to their synthetic controls
+
+p <- plot_placebos(tdf,discard.extreme=TRUE, mspe.limit=10, xlab='Year')
+p
+}
+\donttest{## Example with toy data from Synth
 library(Synth)
 # Load the simulated data
 data(synth.data)
@@ -66,14 +114,14 @@ synth.out <- synth(dataprep.out, Sigf.ipop=2)
 ## to each unit listed as control, one at a time, and generate their
 ## synthetic versions. Sigf.ipop = 2 for faster computing time. 
 ## Increase to the default of 5 for better estimates. 
-tdf <- generate.placebos(dataprep.out,synth.out, Sigf.ipop = 2, strategy='multiprocess')
+tdf <- generate.placebos(dataprep.out,synth.out, Sigf.ipop = 2, strategy='multicore')
 
 ## Plot the gaps in outcome values over time of each unit --
 ## treated and placebos -- to their synthetic controls
 
 p <- plot_placebos(tdf,discard.extreme=TRUE, mspe.limit=10, xlab='Year')
 p
-
+}
 }
 \seealso{
 \code{\link{generate.placebos}}, \code{\link[Synth]{gaps.plot}}, 

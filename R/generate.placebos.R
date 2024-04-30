@@ -11,8 +11,8 @@
 #' @param Sigf.ipop The Precision setting for the ipop optimization routine. 
 #'     Default of 5.
 #' @param strategy The processing method you wish to use 
-#'    "sequential" or "multiprocess". Use "multiprocess" to parallelize operations
-#'     and reduce computing time. Default is \code{sequential}.
+#'    "sequential", "multicore" or "multisession". Use "multicore" or "multisession" to parallelize operations
+#'     and reduce computing time. Default is \code{sequential}. Since SCtools >= 0.3.2 "multiprocess" is deprecated.
 #' @return \describe{
 #'    \item{df }{Data frame with outcome data for each control unit and their 
 #'    respective synthetic control and for the original treated and its control}
@@ -46,7 +46,7 @@
 #'       list("Y", 1991, "mean")
 #'     ),
 #'     treatment.identifier = 7,
-#'     controls.identifier = c(29, 2, 13),
+#'     controls.identifier = c(29, 2, 17),
 #'     time.predictors.prior = c(1984:1989),
 #'     time.optimize.ssr = c(1984:1990),
 #'     unit.names.variable = "name",
@@ -54,15 +54,11 @@
 #' )
 #' 
 #' # run the synth command to create the synthetic control
-#' synth.out <- synth(dataprep.out, Sigf.ipop=2)
+#' synth.out <- synth(dataprep.out, Sigf.ipop=1)
 #' 
-#' ## run the generate.placebos command to reassign treatment status
-#' ## to each unit listed as control, one at a time, and generate their
-#' ## synthetic versions. Sigf.ipop = 2 for faster computing time. 
-#' ## Increase to the default of 5 for better estimates. 
-#' tdf <- generate.placebos(dataprep.out,synth.out, Sigf.ipop = 2)
+#' tdf <- generate.placebos(dataprep.out,synth.out, Sigf.ipop = 1)
 #' }
-#' \dontrun{## Example with toy data from Synth
+#' \donttest{## Example with toy data from Synth
 #' library(Synth)
 #' # Load the simulated data
 #' data(synth.data)
@@ -118,7 +114,8 @@ generate.placebos <- function(dataprep.out,
     stop("You have not passed a valid argument for Signf.ipop. Please pass a positive integer")
   }
   
-  strategy_match <- match.arg(strategy, c("sequential", "multiprocess"))
+  strategy_match <- match.arg(strategy, c("sequential",
+  																				"multicore", "multisession"))
   
   unit.numbers <- NULL
   

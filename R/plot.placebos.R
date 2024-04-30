@@ -15,10 +15,47 @@
 #' @param title Character. Optional. Title of the plot.
 #' @param alpha.placebos the transparency setting, default of \code{1}
 #' @param ... optional arguments (currently not used)
+#' @return p.gaps Gaps plot indicating difference between the treated unit, 
+#'		 the placebos, and their respective synthetic controls.
 #' @seealso \code{\link{generate.placebos}}, \code{\link[Synth]{gaps.plot}}, 
 #'     \code{\link[Synth]{synth}}, \code{\link[Synth]{dataprep}}
 #' @examples 
-## Example with toy data from Synth
+#' \dontshow{## Example with toy data from Synth
+#' library(Synth)
+#' # Load the simulated data
+#' data(synth.data)
+#' 
+#' # Execute dataprep to produce the necessary matrices for synth
+#' dataprep.out<-
+#'   dataprep(
+#'     foo = synth.data,
+#'     predictors = c("X1"),
+#'     predictors.op = "mean",
+#'     dependent = "Y",
+#'     unit.variable = "unit.num",
+#'     time.variable = "year",
+#'     special.predictors = list(
+#'       list("Y", 1991, "mean")
+#'     ),
+#'     treatment.identifier = 7,
+#'     controls.identifier = c(29, 2, 17),
+#'     time.predictors.prior = c(1984:1989),
+#'     time.optimize.ssr = c(1984:1990),
+#'     unit.names.variable = "name",
+#'     time.plot = 1984:1996
+#' )
+#' 
+#' # run the synth command to create the synthetic control
+#' synth.out <- synth(dataprep.out, Sigf.ipop=1)
+#' 
+#' tdf <- generate.placebos(dataprep.out,synth.out, Sigf.ipop = 1)
+#' ## Plot the gaps in outcome values over time of each unit --
+#' ## treated and placebos -- to their synthetic controls
+#' 
+#' p <- plot_placebos(tdf,discard.extreme=TRUE, mspe.limit=10, xlab='Year')
+#' p
+#' }
+#' \donttest{## Example with toy data from Synth
 #' library(Synth)
 #' # Load the simulated data
 #' data(synth.data)
@@ -50,14 +87,14 @@
 #' ## to each unit listed as control, one at a time, and generate their
 #' ## synthetic versions. Sigf.ipop = 2 for faster computing time. 
 #' ## Increase to the default of 5 for better estimates. 
-#' tdf <- generate.placebos(dataprep.out,synth.out, Sigf.ipop = 2, strategy='multiprocess')
+#' tdf <- generate.placebos(dataprep.out,synth.out, Sigf.ipop = 2, strategy='multicore')
 #' 
 #' ## Plot the gaps in outcome values over time of each unit --
 #' ## treated and placebos -- to their synthetic controls
 #' 
 #' p <- plot_placebos(tdf,discard.extreme=TRUE, mspe.limit=10, xlab='Year')
 #' p
-#' 
+#' }
 #' @export
 
 plot_placebos <-
@@ -84,7 +121,7 @@ function(tdf=tdf,
   
   
 n<-tdf$n
-t1<-tdf$t1
+t1 <- unique(tdf$df$year)[which(tdf$df$year == tdf$t1) - 1]
 tr<-tdf$tr
 names.and.numbers<-tdf$names.and.numbers
 treated.name<-as.character(tdf$treated.name)
@@ -120,7 +157,7 @@ p.gaps<-ggplot2::ggplot(data=data.frame(df.plot),
                 x=xlab,
                 title=title)+
   ggplot2::scale_color_manual(values = c('2' = 'gray80', '1' = 'black'),
-                     labels = c(tdf$treated.name, 'Control units'), 
+                     labels = c('Control units',tdf$treated.name), 
                      guide = ggplot2::guide_legend(NULL))+
   ggplot2::theme(panel.background = ggplot2::element_blank(), 
           panel.grid.major = ggplot2::element_blank(),
